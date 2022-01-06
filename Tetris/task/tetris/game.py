@@ -5,6 +5,7 @@ class Tetris:
         self.n = n  # n is the board height
         self.grid = ["-" for _ in range(self.m * self.n)]
         self.rotation = 0
+        self.letter_coordinates = self.letter[self.letter][self.rotation]
 
     @staticmethod
     def set_dimmensions():
@@ -17,13 +18,13 @@ class Tetris:
             return dimensions[0], dimensions[1]
 
     letters_dict = {
-            "O": [[4, 14, 15, 5]],
-            "I": [[4, 14, 24, 34], [3, 4, 5, 6]],
-            "S": [[5, 4, 14, 13], [4, 14, 15, 25]],
-            "Z": [[4, 5, 15, 16], [5, 15, 14, 24]],
-            "L": [[4, 14, 24, 25], [5, 15, 14, 13], [4, 5, 15, 25], [6, 5, 4, 14]],
-            "J": [[5, 15, 25, 24], [15, 5, 4, 3], [5, 4, 14, 24], [4, 14, 15, 16]],
-            "T": [[4, 14, 24, 15], [4, 13, 14, 15], [5, 15, 25, 14], [4, 5, 6, 15]],
+        "O": [[4, 14, 15, 5]],
+        "I": [[4, 14, 24, 34], [3, 4, 5, 6]],
+        "S": [[5, 4, 14, 13], [4, 14, 15, 25]],
+        "Z": [[4, 5, 15, 16], [5, 15, 14, 24]],
+        "L": [[4, 14, 24, 25], [5, 15, 14, 13], [4, 5, 15, 25], [6, 5, 4, 14]],
+        "J": [[5, 15, 25, 24], [15, 5, 4, 3], [5, 4, 14, 24], [4, 14, 15, 16]],
+        "T": [[4, 14, 24, 15], [4, 13, 14, 15], [5, 15, 25, 14], [4, 5, 6, 15]],
     }
 
     def print_grid(self):
@@ -46,7 +47,7 @@ class Tetris:
 
     def print_piece(self):
         self.print_grid()
-        
+
         current_rotation = 0
         while current_rotation != 4:
             for pos in range(len(self.letters_dict[self.letter])):
@@ -64,7 +65,6 @@ class Tetris:
         # print("CURRENT SELF ROTATION", self.rotation)
         self.fill_out_grid(self.rotation)
 
-
     def down(self):
         # print(self.letters_dict[self.letter])
         # add try - except to handle textures ?
@@ -73,15 +73,16 @@ class Tetris:
         # print(self.letters_dict[self.letter])
 
     def move_left(self):
+        # either track coordinates
+        # 0 + self.m and 0 * self.m are borders
+        # use filters
+
         new_value = [[int(x) - 1 for x in variant] for variant in self.letters_dict[self.letter]]
         self.letters_dict[self.letter] = new_value
 
     def move_right(self):
         new_value = [[int(x) + 1 for x in variant] for variant in self.letters_dict[self.letter]]
         self.letters_dict[self.letter] = new_value
-
-
-
 
     def move_it(self):
         self.print_grid()
@@ -90,7 +91,6 @@ class Tetris:
         self.fill_out_grid(rotation)
         self.print_grid()
         self.reset_grid()
-
 
         while True:
             action = input("\n")
@@ -112,7 +112,6 @@ class Tetris:
             elif action == "right":
                 self.move_right()
                 self.fill_out_grid(self.rotation)
-
 
             self.print_grid()
             self.reset_grid()
