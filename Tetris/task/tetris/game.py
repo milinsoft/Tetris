@@ -81,12 +81,7 @@ class Tetris:
                 self.reset_grid()
 
     def rotate(self):
-        # print(len(self.letters_dict[self.letter]))
-        if self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1:
-            self.rotation += 1
-        else:
-            self.rotation = 0
-        # print("CURRENT SELF ROTATION", self.rotation)
+        self.rotation += 1 if (self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1) else 0
 
     def down(self):
         if not self.is_valid_move(direction="bottom"):
