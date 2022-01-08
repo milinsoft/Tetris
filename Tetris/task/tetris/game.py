@@ -5,7 +5,15 @@ class Tetris:
         self.n = n  # n is the board height
         self.grid = ["-" for _ in range(self.m * self.n)]
         self.rotation = 0
-        self.letter_coordinates = self.letter[self.letter][self.rotation]
+        self.border_points = {"left": [x for x in range(self.m * self.n) if x % self.m == 0],
+                              "right": [x for x in range(self.m * self.n) if x % self.m == 9],
+                              "bottom": [x for x in range(self.m * self.n - 1,  (self.m * self.n) - self.m - 1, -1)][::-1]
+                              }
+
+
+    @property
+    def letter_coordinates(self):
+        return self.letters_dict[self.letter][self.rotation]
 
     @staticmethod
     def set_dimmensions():
@@ -63,28 +71,43 @@ class Tetris:
         else:
             self.rotation = 0
         # print("CURRENT SELF ROTATION", self.rotation)
-        self.fill_out_grid(self.rotation)
+
 
     def down(self):
-        # print(self.letters_dict[self.letter])
-        # add try - except to handle textures ?
+        if not self.is_valid_move(direction="bottom"):
+            return
+
         new_value = [[int(x) + self.m for x in variant] for variant in self.letters_dict[self.letter]]
         self.letters_dict[self.letter] = new_value
-        # print(self.letters_dict[self.letter])
 
     def move_left(self):
-        # either track coordinates
-        # 0 + self.m and 0 * self.m are borders
-        # use filters
+        if not self.is_valid_move(direction="left"):
+            return
 
         new_value = [[int(x) - 1 for x in variant] for variant in self.letters_dict[self.letter]]
         self.letters_dict[self.letter] = new_value
 
     def move_right(self):
+        if not self.is_valid_move(direction="right"):
+            return
+
         new_value = [[int(x) + 1 for x in variant] for variant in self.letters_dict[self.letter]]
         self.letters_dict[self.letter] = new_value
 
+    def is_valid_move(self, letter_coordinates=None, direction=None):
+        if not letter_coordinates:
+            letter_coordinates = self.letter_coordinates
+
+        for coordinate in letter_coordinates:
+            if coordinate in self.border_points[direction] or coordinate in self.border_points["bottom"]:  # this will cause block on the last offset
+                return False
+        return True
+
     def move_it(self):
+        # print(self.border_points)
+
+        # allow moving before figure hits the floor and block movement then.
+
         self.print_grid()
 
         rotation = 0
@@ -94,25 +117,39 @@ class Tetris:
 
         while True:
             action = input("\n")
-            # down - anyway
-            self.down()
+            # self.down()
+
+
             if action == "exit":
                 exit()
+                """
+        
+            elif not self.is_valid_move(direction="bottom"):
+                self.print_grid()
+                """
 
             elif action == "rotate":
-                self.rotate()
+                new_rotation = self.rotation + 1 if self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1 else 0
+                if self.is_valid_move(letter_coordinates=self.letters_dict[self.letter][new_rotation], direction="left"):
+                    if self.is_valid_move(letter_coordinates=self.letters_dict[self.letter][new_rotation], direction="right"):
+                        self.rotate()
+                else:
+                    pass
 
             elif action == "down":
-                self.fill_out_grid(self.rotation)
+                pass
 
             elif action == "left":
                 self.move_left()
-                self.fill_out_grid(self.rotation)
+
 
             elif action == "right":
                 self.move_right()
-                self.fill_out_grid(self.rotation)
 
+
+            # down - anyway
+            self.down()
+            self.fill_out_grid(self.rotation)
             self.print_grid()
             self.reset_grid()
 
