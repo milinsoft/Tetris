@@ -34,7 +34,7 @@ class Tetris:
                 exit()
             elif _letter not in Tetris.letters_dict:
                 print("Invalid letter, please choose among 'O' 'I' 'S' 'Z''L' 'J' 'T'")
-                return main()
+                return Tetris.from_string()
             return _letter
 
         def set_dimmensions():
@@ -83,25 +83,16 @@ class Tetris:
     def rotate(self):
         self.rotation += 1 if (self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1 or self.rotation == -1) else 0
 
-    def down(self):
-        if not self.is_valid_move(direction="bottom"):
+    def move(self, direction):  # it was left
+        if direction == "down":
+            direction = "bottom"
+        # +1 if moving right, -1 if moving left.
+        offset = {"left": -1, "right": +1, "bottom": self.m}[direction]
+
+        if not self.is_valid_move(direction=direction):
             return
 
-        new_value = [[int(x) + self.m for x in variant] for variant in self.letters_dict[self.letter]]
-        self.letters_dict[self.letter] = new_value
-
-    def move_left(self):
-        if not self.is_valid_move(direction="left"):
-            return
-
-        new_value = [[int(x) - 1 for x in variant] for variant in self.letters_dict[self.letter]]
-        self.letters_dict[self.letter] = new_value
-
-    def move_right(self):
-        if not self.is_valid_move(direction="right"):
-            return
-
-        new_value = [[int(x) + 1 for x in variant] for variant in self.letters_dict[self.letter]]
+        new_value = [[int(x) + offset for x in variant] for variant in self.letters_dict[self.letter]]
         self.letters_dict[self.letter] = new_value
 
     def is_valid_move(self, direction=None):
@@ -110,12 +101,12 @@ class Tetris:
                 return False
         return True
 
-    def move_it(self):
-        self.print_grid()
+    def place_first_letter(self):
         self.fill_out_grid(self.rotation)
         self.print_grid()
         self.reset_grid()
 
+    def move_it(self):
         def choose_action():
             _action = input("\n")
             if _action not in ("left", "right", "down", "rotate", "exit"):
@@ -138,13 +129,13 @@ class Tetris:
                 pass
 
             elif action == "left":
-                self.move_left()
+                self.move("left")
 
             elif action == "right":
-                self.move_right()
+                self.move("right")
 
             # down - anyway
-            self.down()
+            self.move("down")
             self.fill_out_grid(self.rotation)
             self.print_grid()
             self.reset_grid()
@@ -152,6 +143,8 @@ class Tetris:
 
 def main():
     game = Tetris.from_string()
+    game.print_grid()
+    game.place_first_letter()
     game.move_it()
 
 
