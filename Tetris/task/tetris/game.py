@@ -69,23 +69,19 @@ class Tetris:
     def reset_grid(self):
         self.grid = ["-" for _ in range(self.m * self.n)]
 
-    def print_piece(self):
-        self.print_grid()
-
-        current_rotation = 0
-        while current_rotation != 4:
-            for pos in range(len(self.letters_dict[self.letter])):
-                self.fill_out_grid(pos)
-                current_rotation += 1
-                self.print_grid()
-                self.reset_grid()
-
     def rotate(self):
+        # creating back up
+        current_rotation = self.rotation
+        # rotate
         self.rotation += 1 if (self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1 or self.rotation == -1) else 0
+        # validate
+        if not all([self.is_valid_move(direction="left"), self.is_valid_move(direction="right")]):
+            # undo if validation failed
+            self.rotation = current_rotation
+
 
     def move(self, direction):  # it was left
-        if direction == "down":
-            direction = "bottom"
+        direction = "bottom" if direction == "down" else direction
         # +1 if moving right, -1 if moving left.
         offset = {"left": -1, "right": +1, "bottom": self.m}[direction]
 
@@ -107,32 +103,24 @@ class Tetris:
         self.reset_grid()
 
     def move_it(self):
-        def choose_action():
-            _action = input("\n")
-            if _action not in ("left", "right", "down", "rotate", "exit"):
-                print("Invalid option. Try any of the following options\n'left', 'right', 'down', 'rotate', 'exit': ")
-                return choose_action()
-            return _action
-
         while True:
-            action = choose_action()
+            # add match case?
+            action = action = input("\n")
             if action == "exit":
                 exit()
 
             elif action == "rotate":
                 self.rotate()
 
-                if not all([self.is_valid_move(direction="left"), self.is_valid_move(direction="right")]):
-                    self.rotation -= 1
-
             elif action == "down":
                 pass
 
-            elif action == "left":
-                self.move("left")
+            elif action in {"left", "right"}:
+                self.move(action)
 
-            elif action == "right":
-                self.move("right")
+            else:
+                print("Invalid option. Try any of the following options\n'left', 'right', 'down', 'rotate', 'exit': ")
+                return self.move_it()
 
             # down - anyway
             self.move("down")
