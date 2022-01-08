@@ -81,7 +81,7 @@ class Tetris:
                 self.reset_grid()
 
     def rotate(self):
-        self.rotation += 1 if (self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1) else 0
+        self.rotation += 1 if (self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1 or self.rotation == -1) else 0
 
     def down(self):
         if not self.is_valid_move(direction="bottom"):
@@ -104,11 +104,8 @@ class Tetris:
         new_value = [[int(x) + 1 for x in variant] for variant in self.letters_dict[self.letter]]
         self.letters_dict[self.letter] = new_value
 
-    def is_valid_move(self, letter_coordinates=None, direction=None):
-        if not letter_coordinates:
-            letter_coordinates = self.letter_coordinates
-
-        for coordinate in letter_coordinates:
+    def is_valid_move(self, direction=None):
+        for coordinate in self.letter_coordinates:
             if coordinate in self.border_points[direction] or coordinate in self.border_points["bottom"]:
                 return False
         return True
@@ -132,11 +129,10 @@ class Tetris:
                 exit()
 
             elif action == "rotate":
-                new_rotation = self.rotation + 1 if self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1 else 0
-                l = self.letters_dict[self.letter][new_rotation]
-                if all([self.is_valid_move(letter_coordinates=l, direction="left"),
-                        self.is_valid_move(letter_coordinates=l, direction="right")]):
-                    self.rotate()
+                self.rotate()
+
+                if not all([self.is_valid_move(direction="left"), self.is_valid_move(direction="right")]):
+                    self.rotation -= 1
 
             elif action == "down":
                 pass
