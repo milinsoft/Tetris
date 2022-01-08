@@ -1,30 +1,4 @@
 class Tetris:
-    def __init__(self, letter, m, n):
-        self.letter = letter
-        self.m = m  # m is the board width
-        self.n = n  # n is the board height
-        self.grid = ["-" for _ in range(self.m * self.n)]
-        self.rotation = 0
-        self.border_points = {"left": [x for x in range(self.m * self.n) if x % self.m == 0],
-                              "right": [x for x in range(self.m * self.n) if x % self.m == 9],
-                              "bottom": [x for x in range(self.m * self.n - 1,  (self.m * self.n) - self.m - 1, -1)][::-1]
-                              }
-
-
-    @property
-    def letter_coordinates(self):
-        return self.letters_dict[self.letter][self.rotation]
-
-    @staticmethod
-    def set_dimmensions():
-        try:
-            dimensions = [int(x) for x in input().split()]
-        except ValueError:
-            print("Incorrect values provided")
-            return Tetris.set_dimmensions()
-        else:
-            return dimensions[0], dimensions[1]
-
     letters_dict = {
         "O": [[4, 14, 15, 5]],
         "I": [[4, 14, 24, 34], [3, 4, 5, 6]],
@@ -34,6 +8,48 @@ class Tetris:
         "J": [[5, 15, 25, 24], [15, 5, 4, 3], [5, 4, 14, 24], [4, 14, 15, 16]],
         "T": [[4, 14, 24, 15], [4, 13, 14, 15], [5, 15, 25, 14], [4, 5, 6, 15]],
     }
+
+    def __init__(self, letter, m, n):
+        self.letter = letter
+        self.m = m  # m is the board width
+        self.n = n  # n is the board height
+        self.grid = ["-" for _ in range(self.m * self.n)]
+        self.rotation = 0
+        self.border_points = {"left": [x for x in range(self.m * self.n) if x % self.m == 0],
+                              "right": [x for x in range(self.m * self.n) if x % self.m == 9],
+                              "bottom": [x for x in range(self.m * self.n - 1, (self.m * self.n) - self.m - 1, -1)][
+                                        ::-1]
+                              }
+
+    @property
+    def letter_coordinates(self):
+        return self.letters_dict[self.letter][self.rotation]
+
+    @classmethod
+    def from_string(cls):
+        def get_figure():
+            _letter = input().strip().upper()
+            if _letter == "/EXIT":
+                print("Bye bye!")
+                exit()
+            elif _letter not in Tetris.letters_dict:
+                print("Invalid letter, please choose among 'O' 'I' 'S' 'Z''L' 'J' 'T'")
+                return main()
+            return _letter
+
+        def set_dimmensions():
+            try:
+                dimensions = [int(x) for x in input().split()]
+            except ValueError:
+                print("Incorrect values provided")
+                return set_dimmensions()
+            else:
+                return dimensions[0], dimensions[1]
+
+        letter = get_figure()
+        m, n = set_dimmensions()
+
+        return cls(letter, m, n)
 
     def print_grid(self):
         i = 0
@@ -72,7 +88,6 @@ class Tetris:
             self.rotation = 0
         # print("CURRENT SELF ROTATION", self.rotation)
 
-
     def down(self):
         if not self.is_valid_move(direction="bottom"):
             return
@@ -99,42 +114,34 @@ class Tetris:
             letter_coordinates = self.letter_coordinates
 
         for coordinate in letter_coordinates:
-            if coordinate in self.border_points[direction] or coordinate in self.border_points["bottom"]:  # this will cause block on the last offset
+            if coordinate in self.border_points[direction] or coordinate in self.border_points["bottom"]:
                 return False
         return True
 
     def move_it(self):
-        # print(self.border_points)
-
-        # allow moving before figure hits the floor and block movement then.
-
         self.print_grid()
-
-        rotation = 0
-        self.fill_out_grid(rotation)
+        self.fill_out_grid(self.rotation)
         self.print_grid()
         self.reset_grid()
 
+        def choose_action():
+            _action = input("\n")
+            if _action not in ("left", "right", "down", "rotate", "exit"):
+                print("Invalid option. Try any of the following options\n'left', 'right', 'down', 'rotate', 'exit': ")
+                return choose_action()
+            return _action
+
         while True:
-            action = input("\n")
-            # self.down()
-
-
+            action = choose_action()
             if action == "exit":
                 exit()
-                """
-        
-            elif not self.is_valid_move(direction="bottom"):
-                self.print_grid()
-                """
 
             elif action == "rotate":
                 new_rotation = self.rotation + 1 if self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1 else 0
-                if self.is_valid_move(letter_coordinates=self.letters_dict[self.letter][new_rotation], direction="left"):
-                    if self.is_valid_move(letter_coordinates=self.letters_dict[self.letter][new_rotation], direction="right"):
-                        self.rotate()
-                else:
-                    pass
+                l = self.letters_dict[self.letter][new_rotation]
+                if all([self.is_valid_move(letter_coordinates=l, direction="left"),
+                        self.is_valid_move(letter_coordinates=l, direction="right")]):
+                    self.rotate()
 
             elif action == "down":
                 pass
@@ -142,10 +149,8 @@ class Tetris:
             elif action == "left":
                 self.move_left()
 
-
             elif action == "right":
                 self.move_right()
-
 
             # down - anyway
             self.down()
@@ -155,15 +160,7 @@ class Tetris:
 
 
 def main():
-    # while True:
-    letter = input().strip().upper()
-    if letter == "/exit":
-        print("Bye bye!")
-        exit()
-
-    m, n = Tetris.set_dimmensions()
-    game = Tetris(letter, m, n)
-    # game.print_piece()
+    game = Tetris.from_string()
     game.move_it()
 
 
