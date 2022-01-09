@@ -79,7 +79,6 @@ class Tetris:
             # undo if validation failed
             self.rotation = current_rotation
 
-
     def move(self, direction):  # it was left
         direction = "bottom" if direction == "down" else direction
         # +1 if moving right, -1 if moving left.
@@ -105,7 +104,7 @@ class Tetris:
     def move_it(self):
         while True:
             # add match case?
-            action = action = input("\n")
+            action = input("\n")
             if action == "exit":
                 exit()
 
