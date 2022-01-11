@@ -2,6 +2,7 @@ class Tetris:
 
     def __init__(self, letter, m, n):
         self.letter = letter
+        self.letters_dict = {}
         self.m = m  # m is the board width
         self.n = n  # n is the board height
         self.grid = ["-" for _ in range(self.m * self.n)]
@@ -12,8 +13,6 @@ class Tetris:
                                         ::-1]
                               }
         self.static_cells = []
-
-
 
     @property
     def letter_coordinates(self):
@@ -46,14 +45,14 @@ class Tetris:
         return cls(letter, m, n)
 
     def reset_dict(self):
-        Tetris.letters_dict = {
-                            "O": [[4, 14, 15, 5]],
-                            "I": [[4, 14, 24, 34], [3, 4, 5, 6]],
-                            "S": [[5, 4, 14, 13], [4, 14, 15, 25]],
-                            "Z": [[4, 5, 15, 16], [5, 15, 14, 24]],
-                            "L": [[4, 14, 24, 25], [5, 15, 14, 13], [4, 5, 15, 25], [6, 5, 4, 14]],
-                            "J": [[5, 15, 25, 24], [15, 5, 4, 3], [5, 4, 14, 24], [4, 14, 15, 16]],
-                            "T": [[4, 14, 24, 15], [4, 13, 14, 15], [5, 15, 25, 14], [4, 5, 6, 15]],
+        self.letters_dict = {
+            "O": [[4, 14, 15, 5]],
+            "I": [[4, 14, 24, 34], [3, 4, 5, 6]],
+            "S": [[5, 4, 14, 13], [4, 14, 15, 25]],
+            "Z": [[4, 5, 15, 16], [5, 15, 14, 24]],
+            "L": [[4, 14, 24, 25], [5, 15, 14, 13], [4, 5, 15, 25], [6, 5, 4, 14]],
+            "J": [[5, 15, 25, 24], [15, 5, 4, 3], [5, 4, 14, 24], [4, 14, 15, 16]],
+            "T": [[4, 14, 24, 15], [4, 13, 14, 15], [5, 15, 25, 14], [4, 5, 6, 15]],
         }
 
     def place_first_letter(self):
@@ -87,7 +86,8 @@ class Tetris:
         # creating back up
         current_rotation = self.rotation
         # rotate
-        self.rotation += 1 if (self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1 or self.rotation == -1) else 0
+        self.rotation += 1 if (
+                self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1 or self.rotation == -1) else 0
         # validate
         if not all([self.is_valid_move(direction="left"), self.is_valid_move(direction="right")]):
             # undo if validation failed
@@ -106,7 +106,8 @@ class Tetris:
 
     def is_valid_move(self, direction=None):
         for coordinate in self.letter_coordinates:
-            if coordinate in self.border_points[direction] or coordinate in self.static_cells or coordinate in self.border_points["bottom"]:
+            if coordinate in self.border_points[direction] or coordinate in self.static_cells or coordinate in \
+                    self.border_points["bottom"]:
                 return False
         return True
 
@@ -114,7 +115,7 @@ class Tetris:
         # or coodinate is ON static cell. - make it static
         static = False
         for coordinate in self.letter_coordinates:
-            if coordinate in self.border_points["bottom"] or coordinate in [x-self.m for x in self.static_cells]:
+            if coordinate in self.border_points["bottom"] or coordinate in [x - self.m for x in self.static_cells]:
                 static = True
                 break
 
@@ -124,9 +125,8 @@ class Tetris:
                 self.static_cells.append(coordinate)
             # self.letter = choice(list(self.letters_dict.keys()))
 
-
     def game_over(self):
-        return  "Full grid condition"
+        return "Full grid condition"
 
     def drop_row(self):
         control_row = ["-" for _ in range(self.m)]
@@ -134,9 +134,7 @@ class Tetris:
         l1 = last_index - self.m
         bottom_row = self.grid[last_index:l1:-1]
 
-        print(bottom_row==last_index)  # IT WORKS!
-
-
+        print(bottom_row == last_index)  # IT WORKS!
 
     def move_it(self):
         while True:
@@ -170,8 +168,6 @@ class Tetris:
 
                 # self.print_grid()
                 # the bug is that after all manipulations with the piece, it's final coordinates will be in static_moves. It makes sence to reset original letters coordinates
-
-
             else:
                 print("Invalid option. Try any of the following options\n'left', 'right', 'down', 'rotate', 'exit': ")
                 return self.move_it()
@@ -184,10 +180,10 @@ class Tetris:
             self.reset_grid()
 
 
-
 def main():
     game = Tetris.from_string()
-    Tetris.reset_dict(game)
+    game.reset_dict()
+
     game.print_grid()
     game.place_first_letter()
     game.move_it()
