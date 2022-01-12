@@ -1,7 +1,7 @@
 class Tetris:
 
-    def __init__(self, letter, m, n):
-        self.letter = letter
+    def __init__(self, m, n):
+        self.letter = None
         self.letters_dict = {}
         self.m = m  # m is the board width
         self.n = n  # n is the board height
@@ -12,7 +12,7 @@ class Tetris:
                               "bottom": [x for x in range(self.m * self.n - 1, (self.m * self.n) - self.m - 1, -1)][
                                         ::-1]
                               }
-        self.static_cells = []
+        self.static_cells = set()
 
     @property
     def letter_coordinates(self):
@@ -20,16 +20,6 @@ class Tetris:
 
     @classmethod
     def from_string(cls):
-        def get_figure():
-            _letter = input().strip().upper()
-            if _letter == "/EXIT":
-                print("Bye bye!")
-                exit()
-            elif _letter not in 'OISZLJT':
-                print("Invalid letter, please choose among 'O' 'I' 'S' 'Z''L' 'J' 'T'")
-                return Tetris.from_string()
-            return _letter
-
         def set_dimmensions():
             try:
                 dimensions = [int(x) for x in input().split()]
@@ -39,10 +29,9 @@ class Tetris:
             else:
                 return dimensions[0], dimensions[1]
 
-        letter = get_figure()
         m, n = set_dimmensions()
 
-        return cls(letter, m, n)
+        return cls(m, n)
 
     def reset_dict(self):
         self.letters_dict = {
@@ -72,12 +61,12 @@ class Tetris:
             for cell in self.static_cells:
                 self.grid[cell] = "0"
 
-        # use generator?:
-        for y in self.letters_dict[self.letter][self.rotation]:
-            try:
-                self.grid[y] = "0"
-            except IndexError:
-                pass
+        if self.letter:
+            for y in self.letters_dict[self.letter][self.rotation]:
+                try:
+                    self.grid[y] = "0"
+                except IndexError:
+                    pass
 
     def reset_grid(self):
         self.grid = ["-" for _ in range(self.m * self.n)]
@@ -114,30 +103,59 @@ class Tetris:
     def make_static(self):
         # or coodinate is ON static cell. - make it static
         static = False
-        for coordinate in self.letter_coordinates:
-            if coordinate in self.border_points["bottom"] or coordinate in [x - self.m for x in self.static_cells]:
-                static = True
-                break
+        if self.letter:
+            for coordinate in self.letter_coordinates:
+                if coordinate in self.border_points["bottom"] or coordinate in [x - self.m for x in self.static_cells]:
+                    static = True
+                    break
 
-        print(f"Static now is:{static}")
+        # print(f"Static now is:{static}")
         if static:
             for coordinate in self.letter_coordinates:
-                self.static_cells.append(coordinate)
-            # self.letter = choice(list(self.letters_dict.keys()))
+                self.static_cells.add(coordinate)
 
-    def game_over(self):
-        return "Full grid condition"
+            self.letter = None  # need to clear letter coordinates once it became static
+
+    def game_end_check(self):
+        # print("currently the following cells are static:", self.static_cells)
+
+        for cell in self.static_cells:
+            if cell in [x for x in range(self.m)]:
+                print("Game Over!")
+                exit()
 
     def drop_row(self):
-        control_row = ["-" for _ in range(self.m)]
-        last_index = self.m * self.n
-        l1 = last_index - self.m
-        bottom_row = self.grid[last_index:l1:-1]
+        def recalculate_static_cells():
+            self.static_cells = list(self.static_cells)
+            for cell in range(len(self.static_cells)):
+                if self.static_cells[cell] + self.m <= self.m * self.n - 1:
+                    self.static_cells[cell] += self.m
 
-        print(bottom_row == last_index)  # IT WORKS!
+            self.static_cells = set(self.static_cells)
+
+
+        original_static_capacity = len(self.static_cells)
+        control_row = ["0" for _ in range(self.m)]
+
+
+        i = 0
+        for _ in range(self.n):
+            row = self.grid[i:i + self.m]
+            row_indexes = [x for x in range(i, i + self.m)]
+
+            if row == control_row:
+                for cell_index in row_indexes:
+                    self.static_cells.remove(cell_index)
+            i += self.m
+
+        if original_static_capacity != len(self.static_cells):
+            recalculate_static_cells()
+
+
 
     def move_it(self):
         while True:
+
             # add match case?
             action = input("\n")
             if action == "exit":
@@ -161,24 +179,27 @@ class Tetris:
                 self.reset_dict()
                 self.letter = input().strip().upper()
                 self.rotation = 0
-                print("LETTER ADDED", self.letter)
-                print("Current letter coordinates:", self.letter_coordinates)
+                # print("LETTER ADDED", self.letter)
+                # print("Current letter coordinates:", self.letter_coordinates)
                 self.place_first_letter()
+                self.make_static()
+                # self.game_end_check()
+
                 return self.move_it()
 
-                # self.print_grid()
-                # the bug is that after all manipulations with the piece, it's final coordinates will be in static_moves. It makes sence to reset original letters coordinates
             else:
                 print("Invalid option. Try any of the following options\n'left', 'right', 'down', 'rotate', 'exit': ")
                 return self.move_it()
 
             # down - anyway
-            self.move("down")
-            self.make_static()
+            if self.letter:
+                self.move("down")
+
             self.fill_out_grid()
             self.print_grid()
+            self.make_static()
 
-            # validate
+            self.game_end_check()
 
             self.reset_grid()
 
@@ -188,7 +209,7 @@ def main():
     game.reset_dict()
 
     game.print_grid()
-    game.place_first_letter()
+
     game.move_it()
 
 
