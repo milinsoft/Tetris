@@ -177,6 +177,9 @@ class Tetris:
             self.make_static()
             self.fill_out_grid()
             self.print_grid()
+
+            # validate
+
             self.reset_grid()
 
 
