@@ -9,7 +9,7 @@ class Tetris:
         self.rotation = 0
         self.border_points = {"left": [x for x in range(self.m * self.n) if x % self.m == 0],
                               "right": [x for x in range(self.m * self.n) if x % self.m == 9],
-                              "bottom": [x for x in range(self.m * self.n - 1, (self.m * self.n) - self.m - 1, -1)][
+                              "down": [x for x in range(self.m * self.n - 1, (self.m * self.n) - self.m - 1, -1)][
                                         ::-1]
                               }
         self.static_cells = set()
@@ -70,53 +70,45 @@ class Tetris:
             self.rotation -= 1
 
     def move(self, direction):  # it was left
-        direction = "bottom" if direction == "down" else direction
         # +1 if moving right, -1 if moving left.
-        offset = {"left": -1, "right": +1, "bottom": self.m}[direction]
+        offset = {"left": -1, "right": +1, "down": self.m}[direction]
 
         if self.is_valid_move(direction=direction):
             new_value = [[int(x) + offset for x in variant] for variant in self.letters_dict[self.letter]]
             self.letters_dict[self.letter] = new_value
 
     def is_valid_move(self, direction=None):
-        for coordinate in self.letter_coordinates:
-            if coordinate in set(self.border_points[direction] + list(self.static_cells) + self.border_points["bottom"]):
-                return False
-        return True
+        border_and_static_cells = set(self.border_points[direction] + list(self.static_cells) + self.border_points["down"])
+        return not set(self.letter_coordinates).intersection(border_and_static_cells)
 
     def make_static(self):
         # or coodinate is sitting ON a static cell. - make it static
         def in_border_points(cell):
-            return cell in self.border_points["bottom"] \
+            return cell in self.border_points["down"] \
                    or cell in [x - self.m for x in self.static_cells]
 
         if self.letter:
             hit_the_border = [coordinate for coordinate in self.letter_coordinates if in_border_points(coordinate)]
             if hit_the_border:
+                # update static_cells list adding current letter coordinates
                 self.static_cells = {*self.static_cells, *set(self.letter_coordinates)}
+                # reset self.letter value to none to drop self.letter coordinates
                 self.letter = None  # need to clear letter coordinates once it became static
 
     def game_end_check(self):
         # Intersection of two sets returns only elements presented in both sets.
-        if self.static_cells.intersection(set([x for x in range(self.m)])):
+        if self.static_cells.intersection(set((x for x in range(self.m)))):
             print("Game Over!")
             exit()
 
     def drop_row(self):
-        def recalculate_static_cells():
-            self.static_cells = list(self.static_cells)
 
-            # iterating over the static cells to recalculate
-            for cell in range(len(self.static_cells)):
-                # avoiding overwritting of occupied static cells
-                if self.static_cells[cell] + self.m <= self.m * self.n - 1 and self.static_cells[cell] + self.m not in self.static_cells:
-                    # pushing top cells down to be on bottom level of grid or static cells.
-                    self.static_cells[cell] += self.m
-            self.static_cells = set(self.static_cells)
+        def recalculation_required(cell):
+            return all([cell + self.m <= self.m * self.n - 1,
+                        cell + self.m not in self.static_cells])
 
         self.fill_out_grid()
         original_static_capacity = len(self.static_cells)
-
         i = 0
         for _ in range(self.n):
             row = self.grid[i:i + self.m]
@@ -128,58 +120,49 @@ class Tetris:
             i += self.m
 
         if original_static_capacity != len(self.static_cells):
-            recalculate_static_cells()
-
+            # iterating over the static cells and recalculate
+            # avoiding overwritting of occupied static cells
+            # pushing top cells down to be on bottom level of grid or static cells
+            self.static_cells = set([cell + self.m if recalculation_required(cell) else cell for cell in self.static_cells])
         self.reset_grid()
 
-    def move_it(self):
+    def gameplay(self):
         while True:
-            action = input("\n")
-            match action:
-
+            option = input("\n")
+            match option:
                 case "exit":
                     exit()
-
                 case "rotate":
                     self.rotate()
                     self.move("down")
-
                 case "down":
                     if self.letter:
-                        self.move("down")
-
+                        self.move(option)
                 case "left" | "right":  # "|" == "or"
-                    self.move(action)
+                    self.move(option)
                     self.move("down")
-
                 case "break":
                     self.drop_row()
-
                 case "piece":
                     self.reset_dict()
                     self.letter = input().strip().upper()
                     self.rotation = 0
-
                 case _:
                     print("Invalid option.\nPossible options: 'left', 'right', 'down', 'rotate', 'exit': ")
-                    return self.move_it()
+                    return self.gameplay()
 
             self.fill_out_grid()
             self.make_static()
-
             self.print_grid()
-            if action != "piece":
+            if option != "piece":
                 self.game_end_check()
             self.reset_grid()
 
 
 def main():
     game = Tetris.from_string()
-    game.reset_dict()
-
     game.print_grid()
-
-    game.move_it()
+    game.gameplay()
 
 
 if __name__ == "__main__":
