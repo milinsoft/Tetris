@@ -51,11 +51,6 @@ class Tetris:
             i += self.m
         print()
 
-    def place_first_letter(self):
-        self.fill_out_grid()
-        self.print_grid()
-        self.reset_grid()
-
     def fill_out_grid(self, ):
         if self.static_cells:
             for cell in self.static_cells:
@@ -122,27 +117,32 @@ class Tetris:
     def drop_row(self):
         def recalculate_static_cells():
             self.static_cells = list(self.static_cells)
-            for cell in range(len(self.static_cells)):
-                if self.static_cells[cell] + self.m <= self.m * self.n - 1:
-                    self.static_cells[cell] += self.m
 
+            # iterating over the static cells to recalculate
+            for cell in range(len(self.static_cells)):
+                # avoiding overwritting of occupied static cells
+                if self.static_cells[cell] + self.m <= self.m * self.n - 1 and self.static_cells[cell] + self.m not in self.static_cells:
+                    # pushing top cells down to be on bottom level of grid or static cells.
+                    self.static_cells[cell] += self.m
             self.static_cells = set(self.static_cells)
 
+        self.fill_out_grid()
         original_static_capacity = len(self.static_cells)
-        control_row = ["0" for _ in range(self.m)]
 
         i = 0
         for _ in range(self.n):
             row = self.grid[i:i + self.m]
             row_indexes = [x for x in range(i, i + self.m)]
 
-            if row == control_row:
+            if row == ["0" for _ in range(self.m)]:
                 for cell_index in row_indexes:
                     self.static_cells.remove(cell_index)
             i += self.m
 
         if original_static_capacity != len(self.static_cells):
             recalculate_static_cells()
+
+        self.reset_grid()
 
     def move_it(self):
         while True:
@@ -154,41 +154,34 @@ class Tetris:
 
                 case "rotate":
                     self.rotate()
+                    self.move("down")
 
                 case "down":
-                    pass
+                    if self.letter:
+                        self.move("down")
 
                 case "left" | "right":  # "|" == "or"
                     self.move(action)
+                    self.move("down")
 
                 case "break":
-                    self.fill_out_grid()  # for test only
                     self.drop_row()
-                    self.reset_grid()  # for test only
 
                 case "piece":
                     self.reset_dict()
                     self.letter = input().strip().upper()
                     self.rotation = 0
 
-                    self.place_first_letter()
-                    self.make_static()
-                    return self.move_it()
-
                 case _:
-                    print("Invalid option.\nTry any of the following options\n'left', 'right', 'down', 'rotate', 'exit': ")
+                    print("Invalid option.\nPossible options: 'left', 'right', 'down', 'rotate', 'exit': ")
                     return self.move_it()
-
-            # down - anyway
-            if self.letter:
-                self.move("down")
 
             self.fill_out_grid()
-            self.print_grid()
             self.make_static()
 
-            self.game_end_check()
-
+            self.print_grid()
+            if action != "piece":
+                self.game_end_check()
             self.reset_grid()
 
 
