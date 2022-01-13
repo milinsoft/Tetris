@@ -16,18 +16,14 @@ class Tetris:
 
     def reset_dict(self):
         self.letters_dict = {
-            "O": [[4, 14, 15, 5]],
-            "I": [[4, 14, 24, 34], [3, 4, 5, 6]],
-            "S": [[5, 4, 14, 13], [4, 14, 15, 25]],
-            "Z": [[4, 5, 15, 16], [5, 15, 14, 24]],
-            "L": [[4, 14, 24, 25], [5, 15, 14, 13], [4, 5, 15, 25], [6, 5, 4, 14]],
-            "J": [[5, 15, 25, 24], [15, 5, 4, 3], [5, 4, 14, 24], [4, 14, 15, 16]],
-            "T": [[4, 14, 24, 15], [4, 13, 14, 15], [5, 15, 25, 14], [4, 5, 6, 15]],
+                            "O": [[4, 14, 15, 5]],
+                            "I": [[4, 14, 24, 34], [3, 4, 5, 6]],
+                            "S": [[5, 4, 14, 13], [4, 14, 15, 25]],
+                            "Z": [[4, 5, 15, 16], [5, 15, 14, 24]],
+                            "L": [[4, 14, 24, 25], [5, 15, 14, 13], [4, 5, 15, 25], [6, 5, 4, 14]],
+                            "J": [[5, 15, 25, 24], [15, 5, 4, 3], [5, 4, 14, 24], [4, 14, 15, 16]],
+                            "T": [[4, 14, 24, 15], [4, 13, 14, 15], [5, 15, 25, 14], [4, 5, 6, 15]],
         }
-
-    @property
-    def letter_coordinates(self):
-        return self.letters_dict[self.letter][self.rotation]
 
     @classmethod
     def from_string(cls):
@@ -37,6 +33,10 @@ class Tetris:
             print("Incorrect values provided")
             return Tetris.from_string()
         return cls(m=dimensions[0], n=dimensions[1])
+
+    @property
+    def letter_coordinates(self):
+        return self.letters_dict[self.letter][self.rotation]
 
     def print_grid(self):
         i = 0
