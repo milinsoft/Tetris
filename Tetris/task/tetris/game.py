@@ -31,18 +31,12 @@ class Tetris:
 
     @classmethod
     def from_string(cls):
-        def set_dimmensions():
-            try:
-                dimensions = [int(x) for x in input().split()]
-            except ValueError:
-                print("Incorrect values provided")
-                return set_dimmensions()
-            else:
-                return dimensions[0], dimensions[1]
-
-        m, n = set_dimmensions()
-
-        return cls(m, n)
+        try:
+            dimensions = [int(x) for x in input().split()]
+        except ValueError:
+            print("Incorrect values provided")
+            return Tetris.from_string()
+        return cls(m=dimensions[0], n=dimensions[1])
 
     def print_grid(self):
         i = 0
@@ -67,8 +61,6 @@ class Tetris:
         self.grid = ["-" for _ in range(self.m * self.n)]
 
     def rotate(self):
-        # creating back up
-
         # rotate
         self.rotation += 1 if (
                 self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1 or self.rotation == -1) else 0
@@ -82,37 +74,33 @@ class Tetris:
         # +1 if moving right, -1 if moving left.
         offset = {"left": -1, "right": +1, "bottom": self.m}[direction]
 
-        if not self.is_valid_move(direction=direction):
-            return
-
-        new_value = [[int(x) + offset for x in variant] for variant in self.letters_dict[self.letter]]
-        self.letters_dict[self.letter] = new_value
+        if self.is_valid_move(direction=direction):
+            new_value = [[int(x) + offset for x in variant] for variant in self.letters_dict[self.letter]]
+            self.letters_dict[self.letter] = new_value
 
     def is_valid_move(self, direction=None):
         for coordinate in self.letter_coordinates:
-            if coordinate in self.border_points[direction] or coordinate in self.static_cells \
-                    or coordinate in self.border_points["bottom"]:
+            if coordinate in set(self.border_points[direction] + list(self.static_cells) + self.border_points["bottom"]):
                 return False
         return True
 
     def make_static(self):
-        # or coodinate is ON static cell. - make it static
-        static = False
-        if self.letter:
-            in_border_points = lambda x: x in self.border_points["bottom"] or x in [x - self.m for x in self.static_cells]
+        # or coodinate is sitting ON a static cell. - make it static
+        def in_border_points(cell):
+            return cell in self.border_points["bottom"] \
+                   or cell in [x - self.m for x in self.static_cells]
 
+        if self.letter:
             hit_the_border = [coordinate for coordinate in self.letter_coordinates if in_border_points(coordinate)]
             if hit_the_border:
-                for coordinate in self.letter_coordinates:
-                    self.static_cells.add(coordinate)
+                self.static_cells = {*self.static_cells, *set(self.letter_coordinates)}
                 self.letter = None  # need to clear letter coordinates once it became static
 
     def game_end_check(self):
-        # print("currently the following cells are static:", self.static_cells)
-        for cell in self.static_cells:
-            if cell in [x for x in range(self.m)]:
-                print("Game Over!")
-                exit()
+        # Intersection of two sets returns only elements presented in both sets.
+        if self.static_cells.intersection(set([x for x in range(self.m)])):
+            print("Game Over!")
+            exit()
 
     def drop_row(self):
         def recalculate_static_cells():
