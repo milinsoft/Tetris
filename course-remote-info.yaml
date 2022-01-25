@@ -3,7 +3,7 @@ hyperskill_project:
   ide_files: https://stepik.org/media/attachments/lesson/464418/additional_files.json
   is_template_based: false
   use_ide: true
-update_date: Wed, 12 Jan 2022 16:52:13 UTC
+update_date: Tue, 25 Jan 2022 13:30:01 UTC
 stages:
 - id: 791
   step: 11891
@@ -21,12 +21,12 @@ topics:
   0:
   - title: Cartesian coordinates
     theory_id: 13114
+  - title: Introduction to operating systems
+    theory_id: 9704
   - title: Vectors, matrices, scalars
     theory_id: 16969
   - title: Introduction to matrices
     theory_id: 7112
-  - title: Introduction to operating systems
-    theory_id: 9704
   - title: Intro to NumPy
     theory_id: 9672
   - title: Operations with an array

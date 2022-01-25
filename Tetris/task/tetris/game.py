@@ -7,14 +7,14 @@ class Tetris:
         self.n = n  # n is the board height
         self.grid = ["-" for _ in range(self.m * self.n)]
         self.rotation = 0
-        self.border_points = {"left": [x for x in range(self.m * self.n) if x % self.m == 0],
+        self.border_points = {
+                              "left": [x for x in range(self.m * self.n) if x % self.m == 0],
                               "right": [x for x in range(self.m * self.n) if x % self.m == 9],
-                              "down": [x for x in range(self.m * self.n - 1, (self.m * self.n) - self.m - 1, -1)][
-                                        ::-1]
-                              }
+                              "down": [x for x in range((self.m * self.n) - self.m, self.m * self.n)]
+        }
         self.static_cells = set()
 
-    def reset_dict(self):
+    def reset_dict(self) -> None:
         self.letters_dict = {
                             "O": [[4, 14, 15, 5]],
                             "I": [[4, 14, 24, 34], [3, 4, 5, 6]],
@@ -26,41 +26,39 @@ class Tetris:
         }
 
     @classmethod
-    def from_string(cls):
+    def from_string(cls) -> 'Tetris':
         try:
             dimensions = [int(x) for x in input().split()]
-        except ValueError:
+            assert len(dimensions) == 2
+        except (ValueError, AssertionError):
             print("Incorrect values provided")
             return Tetris.from_string()
-        return cls(m=dimensions[0], n=dimensions[1])
+        return cls(*dimensions)
 
     @property
-    def letter_coordinates(self):
+    def letter_coordinates(self) -> list:
         return self.letters_dict[self.letter][self.rotation]
 
-    def print_grid(self):
-        i = 0
-        for _ in range(self.n):
+    def print_grid(self) -> None:
+        for i in range(0, self.n * self.m, self.m):
             print(" ".join(self.grid[i:i + self.m]))
-            i += self.m
         print()
 
-    def fill_out_grid(self, ):
+    def fill_out_grid(self, ) -> None:
+
         if self.static_cells:
             for cell in self.static_cells:
                 self.grid[cell] = "0"
 
         if self.letter:
             for y in self.letters_dict[self.letter][self.rotation]:
-                try:
+                if 0 < y < self.m * self.n:
                     self.grid[y] = "0"
-                except IndexError:
-                    pass
 
-    def reset_grid(self):
+    def reset_grid(self) -> list:
         self.grid = ["-" for _ in range(self.m * self.n)]
 
-    def rotate(self):
+    def rotate(self) -> int:
         # rotate
         self.rotation += 1 if (
                 self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1 or self.rotation == -1) else 0
@@ -69,27 +67,29 @@ class Tetris:
             # undo if validation failed
             self.rotation -= 1
 
-    def move(self, direction):  # it was left
+    def move(self, direction) -> list:
         # +1 if moving right, -1 if moving left.
-        offset = {"left": -1, "right": +1, "down": self.m}[direction]
+        offset = {"left": -1, "right": +1, "down": self.m}
 
         if self.is_valid_move(direction=direction):
-            new_value = [[int(x) + offset for x in variant] for variant in self.letters_dict[self.letter]]
+            new_value = [[int(x) + offset[direction] for x in variant] for variant in self.letters_dict[self.letter]]
             self.letters_dict[self.letter] = new_value
 
-    def is_valid_move(self, direction=None):
+    def is_valid_move(self, direction=None) -> bool:
         border_and_static_cells = set(self.border_points[direction] + list(self.static_cells) + self.border_points["down"])
-        return not set(self.letter_coordinates).intersection(border_and_static_cells)
+        return not bool(set(self.letter_coordinates).intersection(border_and_static_cells))
 
-    def make_static(self):
+    def make_static(self) -> None:
         # or coodinate is sitting ON a static cell. - make it static
-        def in_border_points(cell):
+        def in_border_points(cell) -> bool:
             return cell in self.border_points["down"] \
                    or cell in [x - self.m for x in self.static_cells]
 
+        def hits_the_border() -> bool:
+            return bool([coordinate for coordinate in self.letter_coordinates if in_border_points(coordinate)])
+
         if self.letter:
-            hit_the_border = [coordinate for coordinate in self.letter_coordinates if in_border_points(coordinate)]
-            if hit_the_border:
+            if hits_the_border():
                 # update static_cells list adding current letter coordinates
                 self.static_cells = {*self.static_cells, *set(self.letter_coordinates)}
                 # reset self.letter value to none to drop self.letter coordinates
@@ -98,26 +98,26 @@ class Tetris:
     def game_end_check(self):
         # Intersection of two sets returns only elements presented in both sets.
         if self.static_cells.intersection(set((x for x in range(self.m)))):
-            print("Game Over!")
-            exit()
+            exit(print("Game Over!"))
 
     def drop_row(self):
 
-        def recalculation_required(cell):
+        def recalculation_required(cell) -> bool:
+            # making sure that new value will be within grid borders and cell is not static and can be moved
             return all([cell + self.m <= self.m * self.n - 1,
                         cell + self.m not in self.static_cells])
 
         self.fill_out_grid()
         original_static_capacity = len(self.static_cells)
-        i = 0
-        for _ in range(self.n):
-            row = self.grid[i:i + self.m]
+
+        for i in range(0, self.n * self.m, self.m):
             row_indexes = [x for x in range(i, i + self.m)]
 
-            if row == ["0" for _ in range(self.m)]:
+            # row == row full of Zeros
+            if self.grid[i:i + self.m] == ["0" for _ in range(self.m)]:
                 for cell_index in row_indexes:
                     self.static_cells.remove(cell_index)
-            i += self.m
+
 
         if original_static_capacity != len(self.static_cells):
             # iterating over the static cells and recalculate
