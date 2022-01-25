@@ -3,8 +3,7 @@ class Tetris:
     def __init__(self, m, n):
         self.letter = None
         self.letters_dict = {}
-        self.m = m  # m is the board width
-        self.n = n  # n is the board height
+        self.m, self.n = m, n  # 'm' is the board width  'n' is the board height
         self.grid = ["-" for _ in range(self.m * self.n)]
         self.rotation = 0
         self.border_points = {
@@ -55,10 +54,10 @@ class Tetris:
                 if 0 < y < self.m * self.n:
                     self.grid[y] = "0"
 
-    def reset_grid(self) -> list:
+    def reset_grid(self) -> None:
         self.grid = ["-" for _ in range(self.m * self.n)]
 
-    def rotate(self) -> int:
+    def rotate(self) -> None:
         # rotate
         self.rotation += 1 if (
                 self.rotation + 1 <= len(self.letters_dict[self.letter]) - 1 or self.rotation == -1) else 0
@@ -67,7 +66,7 @@ class Tetris:
             # undo if validation failed
             self.rotation -= 1
 
-    def move(self, direction) -> list:
+    def move(self, direction) -> None:
         # +1 if moving right, -1 if moving left.
         offset = {"left": -1, "right": +1, "down": self.m}
 
@@ -117,7 +116,6 @@ class Tetris:
             if self.grid[i:i + self.m] == ["0" for _ in range(self.m)]:
                 for cell_index in row_indexes:
                     self.static_cells.remove(cell_index)
-
 
         if original_static_capacity != len(self.static_cells):
             # iterating over the static cells and recalculate
